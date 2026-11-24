@@ -3,47 +3,124 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>你上辈子是什么</title>
+<title>测测你上辈子是什么</title>
 <style>
-  body { font-family: sans-serif; background: #f4f6f8; padding: 20px; }
-  .box { background: #fff; padding: 20px; border-radius: 10px; }
-  button { padding: 12px; width: 100%; margin-bottom: 10px; background: #fff; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; text-align: left; }
-  .next { background: #4f46e5; color: #fff; border: none; text-align: center; }
+  body { font-family: sans-serif; background: #f4f6f8; padding: 20px; margin: 0; }
+  .box { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 500px; margin: 0 auto; }
+  h2 { text-align: center; color: #333; }
+  .question-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #1f2937; }
+  button.option { display: block; width: 100%; padding: 12px; margin-bottom: 10px; background: #f9fafb; border: 1px solid #d1d5db; border-radius: 8px; font-size: 15px; text-align: left; color: #333; cursor: pointer; }
+  button.option:active { background: #e5e7eb; }
+  .progress { text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 15px; }
+  .result-title { text-align: center; font-size: 22px; color: #4f46e5; font-weight: bold; margin-bottom: 10px; }
+  .result-desc { font-size: 15px; color: #4b5563; line-height: 1.6; }
 </style>
 </head>
 <body>
   <div class="box">
-    <h2 id="title">你上辈子是什么？</h2>
-    <div id="area"></div>
-    <button id="btn" class="next" onclick="next()">下一题</button>
+    <h2>你上辈子是什么？</h2>
+    <div id="progress" class="progress"></div>
+    <div id="content"></div>
   </div>
 
 <script>
-  var q = [
-    { t: "你最想拥有哪种能力？", o: ["过目不忘", "临危不乱", "看透商机", "极致手艺"] },
-    { t: "周末最想怎么过？", o: ["安静看书", "户外运动", "约朋友逛街", "在家做手工"] }
+  // 这里定义了题目和计分类型
+  var questions = [
+    { q: "1. 你最想拥有哪种能力？", o: [
+      { text: "过目不忘的记忆力", type: "A" },
+      { text: "临危不乱的胆识", type: "B" },
+      { text: "一眼看透商机的眼光", type: "C" },
+      { text: "把事物做到极致的手艺", type: "D" }
+    ]},
+    { q: "2. 周末你更喜欢怎么度过？", o: [
+      { text: "泡杯茶安静看一天书", type: "A" },
+      { text: "去户外爬山运动", type: "B" },
+      { text: "约朋友逛街聊天", type: "C" },
+      { text: "在家做手工整理房间", type: "D" }
+    ]},
+    { q: "3. 遇到矛盾时，你倾向于？", o: [
+      { text: "讲道理把话说清楚", type: "A" },
+      { text: "直接面对解决", type: "B" },
+      { text: "找个双方都能接受的方案", type: "C" },
+      { text: "先冷静一下不想吵", type: "D" }
+    ]},
+    { q: "4. 如果穿越回古代，你想做什么？", o: [
+      { text: "进书院读书考功名", type: "A" },
+      { text: "从军守城建功立业", type: "B" },
+      { text: "开一间铺子做生意", type: "C" },
+      { text: "归隐山林种花养鸟", type: "D" }
+    ]},
+    { q: "5. 别人最常夸你哪一点？", o: [
+      { text: "懂得多、想得深", type: "A" },
+      { text: "靠谱、有安全感", type: "B" },
+      { text: "脑子转得快会来事", type: "C" },
+      { text: "有品味、做事专注", type: "D" }
+    ]}
   ];
-  var step = 0;
 
-  function show() {
-    var area = document.getElementById("area");
-    area.innerHTML = "<h3>" + q[step].t + "</h3>";
-    for(var i=0; i<q[step].o.length; i++) {
-      area.innerHTML += "<button onclick='next()'>" + q[step].o[i] + "</button>";
+  // 结果库
+  var results = {
+    A: { name: "书香书生 📜", desc: "你上辈子大概率是个爱读书、爱写字的人。心思细腻，喜欢安静思考，对文字和知识有天然好感。" },
+    B: { name: "沙场将军 ⚔️", desc: "你上辈子可能是个有担当、有魄力的人。遇事不轻易退缩，行动力强，喜欢保护身边的人。" },
+    C: { name: "行商掌柜 💰", desc: "你上辈子可能是个走南闯北的商人。脑子灵活，善于观察，懂得权衡利弊，喜欢和人打交道。" },
+    D: { name: "匠心工匠 🔨", desc: "你上辈子可能是个手艺人。做事认真，喜欢把一件事打磨好，对品质和细节有自己的坚持。" }
+  };
+
+  var currentStep = 0;
+  var scores = { A: 0, B: 0, C: 0, D: 0 };
+
+  function showQuestion() {
+    var p = document.getElementById("progress");
+    var c = document.getElementById("content");
+    
+    p.innerText = "第 " + (currentStep + 1) + " / " + questions.length + " 题";
+    c.innerHTML = "<div class='question-title'>" + questions[currentStep].q + "</div>";
+    
+    for (var i = 0; i < questions[currentStep].o.length; i++) {
+      var btn = document.createElement("button");
+      btn.className = "option";
+      btn.innerText = questions[currentStep].o[i].text;
+      // 使用闭包保存当前选项的 type
+      btn.onclick = (function(type) {
+        return function() { nextStep(type); };
+      })(questions[currentStep].o[i].type);
+      
+      c.appendChild(btn);
     }
   }
 
-  function next() {
-    step++;
-    if(step < q.length) {
-      show();
+  function nextStep(type) {
+    scores[type]++; // 记录分数
+    currentStep++;
+    
+    if (currentStep < questions.length) {
+      showQuestion();
     } else {
-      document.getElementById("title").innerText = "你的结果";
-      document.getElementById("area").innerHTML = "<h3>你的上辈子：书香书生 📜</h3><p>测试成功！</p>";
-      document.getElementById("btn").style.display = "none";
+      showResult();
     }
   }
-  show();
+
+  function showResult() {
+    // 找出分数最高的类型
+    var maxType = "A";
+    var maxScore = -1;
+    for (var key in scores) {
+      if (scores[key] > maxScore) {
+        maxScore = scores[key];
+        maxType = key;
+      }
+    }
+    
+    var res = results[maxType];
+    document.getElementById("progress").style.display = "none";
+    document.getElementById("content").innerHTML = 
+      "<div class='result-title'>你的上辈子：" + res.name + "</div>" +
+      "<div class='result-desc'>" + res.desc + "</div>" +
+      "<div style='text-align:center; margin-top:20px; color:#9ca3af; font-size:12px;'>本测试仅供娱乐</div>";
+  }
+
+  // 启动
+  showQuestion();
 </script>
 </body>
 </html>
