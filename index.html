@@ -1,86 +1,49 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>你上辈子是什么？</title>
+<title>你上辈子是什么</title>
 <style>
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: linear-gradient(160deg, #eef4ff, #f8f0ff 60%, #fff7ed); color: #1f2937; min-height: 100vh; }
-  .app { max-width: 560px; margin: 0 auto; padding: 18px 14px 40px; }
-  .card { background: rgba(255,255,255,.92); border-radius: 18px; padding: 20px; box-shadow: 0 10px 30px rgba(30,64,175,.12); }
-  h1 { font-size: 24px; margin: 0 0 8px; text-align: center; }
-  .subtitle { text-align: center; color: #64748b; font-size: 14px; margin: 0 0 18px; }
-  .progress-wrap { height: 8px; background: #e5e7eb; border-radius: 999px; overflow: hidden; margin-bottom: 18px; }
-  .progress-bar { height: 100%; width: 0; background: #6366f1; transition: width .25s ease; }
-  .question { font-size: 18px; font-weight: 700; line-height: 1.5; margin: 0 0 14px; }
-  .options { display: grid; gap: 10px; }
-  .option { width: 100%; text-align: left; padding: 14px 15px; border: 1px solid #dbe1ea; border-radius: 12px; background: #fff; font-size: 15px; line-height: 1.45; cursor: pointer; transition: .15s; color: #1f2937; }
-  .option:hover { border-color: #6366f1; background: #f5f3ff; }
-  .option.selected { border-color: #6366f1; background: #eef2ff; box-shadow: 0 0 0 2px #c7d2fe inset; }
-  .nav { display: flex; gap: 10px; margin-top: 18px; }
-  button.primary, button.secondary { flex: 1; padding: 12px 14px; border: 0; border-radius: 12px; font-size: 15px; cursor: pointer; }
-  button.primary { background: #4f46e5; color: #fff; }
-  button.primary:disabled { opacity: .45; cursor: not-allowed; }
-  button.secondary { background: #e5e7eb; color: #374151; }
-  .hidden { display: none !important; }
-  .result-icon { font-size: 56px; text-align: center; margin: 8px 0; }
-  .result-title { font-size: 26px; font-weight: 800; text-align: center; margin: 0 0 6px; color: #4338ca; }
-  .result-desc { color: #475569; line-height: 1.7; font-size: 15px; margin: 12px 0; }
-  .match { text-align: center; color: #64748b; font-size: 14px; margin-bottom: 16px; }
-  .tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 14px 0; }
-  .tag { background: #eef2ff; color: #4338ca; padding: 6px 10px; border-radius: 999px; font-size: 13px; }
-  .footer-note { text-align: center; color: #94a3b8; font-size: 12px; margin-top: 14px; }
-  .msg { min-height: 18px; color: #dc2626; font-size: 14px; margin-top: 10px; }
+  body { font-family: sans-serif; background: #f4f6f8; padding: 20px; }
+  .box { background: #fff; padding: 20px; border-radius: 10px; }
+  button { padding: 12px; width: 100%; margin-bottom: 10px; background: #fff; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; text-align: left; }
+  .next { background: #4f46e5; color: #fff; border: none; text-align: center; }
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="card">
-    <h1>你上辈子是什么？</h1>
-    <p class="subtitle">5 道题，测测你前世最可能的身份 · 娱乐测试</p>
-
-    <section id="quizSection" data-testid="quiz-section">
-      <div class="progress-wrap">
-        <div id="progressBar" class="progress-bar" data-testid="progress-bar"></div>
-      </div>
-      <div id="questionIndex" class="subtitle" data-testid="question-index"></div>
-      <h2 id="questionText" class="question" data-testid="question-text"></h2>
-      <div id="options" class="options" data-testid="options"></div>
-      <div id="quizMsg" class="msg" data-testid="quiz-msg"></div>
-      <div class="nav">
-        <button id="prevBtn" class="secondary" data-testid="prev-btn">上一题</button>
-        <button id="nextBtn" class="primary" data-testid="next-btn">下一题</button>
-      </div>
-    </section>
-
-    <section id="resultSection" class="hidden" data-testid="result-section">
-      <div id="resultIcon" class="result-icon" data-testid="result-icon"></div>
-      <h2 id="resultTitle" class="result-title" data-testid="result-title"></h2>
-      <div id="resultMatch" class="match" data-testid="result-match"></div>
-      <div id="resultDesc" class="result-desc" data-testid="result-desc"></div>
-      <div id="resultTags" class="tags" data-testid="result-tags"></div>
-      <div class="nav">
-        <button id="restartBtn" class="primary" data-testid="restart-btn">再测一次</button>
-      </div>
-    </section>
-
-    <p class="footer-note">本测试仅为娱乐，结果不具备任何现实依据。</p>
+  <div class="box">
+    <h2 id="title">你上辈子是什么？</h2>
+    <div id="area"></div>
+    <button id="btn" class="next" onclick="next()">下一题</button>
   </div>
-</div>
 
 <script>
-(() => {
-  const $ = (id) => document.getElementById(id);
+  var q = [
+    { t: "你最想拥有哪种能力？", o: ["过目不忘", "临危不乱", "看透商机", "极致手艺"] },
+    { t: "周末最想怎么过？", o: ["安静看书", "户外运动", "约朋友逛街", "在家做手工"] }
+  ];
+  var step = 0;
 
-  const TYPES = {
-    scholar: { name: '书香书生', icon: '📜', desc: '你上辈子大概率是个爱读书、爱写字的人。你心思细腻，喜欢安静地思考，对文字、故事和知识有天然好感。', tags: ['文静', '爱思考', '细节控'] },
-    general: { name: '沙场将军', icon: '⚔️', desc: '你上辈子可能是个有担当、有魄力的人。遇到事情不轻易退缩，喜欢保护身边的人，行动力强。', tags: ['果断', '有担当', '行动派'] },
-    merchant: { name: '行商掌柜', icon: '💰', desc: '你上辈子可能是个走南闯北的商人。你脑子灵活，善于观察，懂得权衡利弊，也喜欢和人打交道。', tags: ['机灵', '会算账', '社交型'] },
-    craftsman: { name: '匠心工匠', icon: '🔨', desc: '你上辈子可能是个手艺人。你做事认真，喜欢把一件事打磨好，对品质和细节有自己的坚持。', tags: ['专注', '手巧', '有耐心'] },
-    hermit: { name: '山野隐士', icon: '🌿', desc: '你上辈子可能是个远离喧嚣的人。你享受独处，喜欢自然和安静，不太爱凑热闹，但内心很丰富。', tags: ['独立', '喜静', '慢热'] },
-    musician: { name: '乐坊乐师', icon: '🎵', desc: '你上辈子可能是个懂音律、有审美的人。你对氛围和情绪很敏感，喜欢美好的事物，也容易共情别人。', tags: ['感性', '审美在线', '共情力'] }
-  };
+  function show() {
+    var area = document.getElementById("area");
+    area.innerHTML = "<h3>" + q[step].t + "</h3>";
+    for(var i=0; i<q[step].o.length; i++) {
+      area.innerHTML += "<button onclick='next()'>" + q[step].o[i] + "</button>";
+    }
+  }
 
-  const QUESTIONS = [
-    { q: '如果只能选一个，你最想拥有哪种能力？', options
+  function next() {
+    step++;
+    if(step < q.length) {
+      show();
+    } else {
+      document.getElementById("title").innerText = "你的结果";
+      document.getElementById("area").innerHTML = "<h3>你的上辈子：书香书生 📜</h3><p>测试成功！</p>";
+      document.getElementById("btn").style.display = "none";
+    }
+  }
+  show();
+</script>
+</body>
+</html>
